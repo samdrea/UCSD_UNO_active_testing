@@ -88,6 +88,12 @@ end
 laser_output(laser, false);
 %% %% Save Result %% %%
 % Saves all variables into .mat file (locat. picked using GUI)
+% Variables that are probably the most useful:
+% - measured_I, measured_P, and measured_V give the actual
+%   current/power/voltage output by the Keithley at the beginning of each
+%   spectrum measurement, regardless of sweep mode
+% - global_params.results gives the transmitted power (in W) at each
+%   heater sampling point
 [output_filename, output_path] = uiputfile('*', 'Select location to save data:');
 if(output_filename)
     save(strcat(output_path,output_filename));
@@ -96,7 +102,7 @@ else
 end
 
 %% %% Plot Result %% %%
-laser_power_mW = 10^(laser_power/10);
+laser_power_W = 1e-3*(10^(laser_power/10));
 plot(measured_P, 10*log10(global_params.results/laser_power_mW));
 xlabel("Heater Power (mW)");
 ylabel("Transmission (dB)");

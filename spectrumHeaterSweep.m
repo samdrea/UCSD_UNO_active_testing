@@ -98,6 +98,17 @@ end
 
 %% %% Save Result %% %%
 % Saves all variables into .mat file (locat. picked using GUI)
+% Variables that are probably the most useful:
+% - measured_I, measured_P, and measured_V give the actual
+%   current/power/voltage output by the Keithley at the beginning of each
+%   spectrum measurement
+% - sweep_params.results gives the spectra from the sweep as a 2 x [# of
+%   lambda points] x [# of heater points] matrix. The spectra of the Nth
+%   heater point can be accessed with sweep_params.results(:,:,N), where
+%   sweep_params.results(1,:,N) are the wavelengths for each sample and
+%   sweep_params.results(2,:,N) is the detected optical power (W) at each
+%   wavelength.
+
 [output_filename, output_path] = uiputfile('*', 'Select location to save data:');
 if(output_filename)
     save(strcat(output_path,output_filename));
