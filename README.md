@@ -16,7 +16,6 @@ In all code:
   * V for voltage
   * mA for current
   * mW for electrical power
-  * dBm for optical power
   
 
 ## Experiment scripts
