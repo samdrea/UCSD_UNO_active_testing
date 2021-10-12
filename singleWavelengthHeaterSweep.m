@@ -102,7 +102,7 @@ else
 end
 
 %% %% Plot Result %% %%
-laser_power_W = 1e-3*(10^(laser_power/10));
+laser_power_mW = 10^(laser_power/10);
 plot(measured_P, 10*log10(global_params.results/laser_power_mW));
 xlabel("Heater Power (mW)");
 ylabel("Transmission (dB)");

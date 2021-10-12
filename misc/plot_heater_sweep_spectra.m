@@ -2,14 +2,14 @@ function plot_heater_sweep_spectra(spectra_results, heater_power, laser_power)
 % plot heater sweep spectra w/ color coded lines
 % spectra_results: 2 x [# of lambda samples] x [# of heater samples] matrix
 % heater_power: array of heater power at each heater sample
-% laser_power: laser power in mW
-    laser_power_W = 1e-3*(10^(laser_power/10));
+% laser_power: laser power in dBm
+    laser_power_mW = (10^(laser_power/10));
     figure;
     hold on
     for i = 1:size(spectra_results,3)
         name = [num2str(heater_power(i),4) ' mW'];
         color = getColor(i,size(spectra_results,3));
-        plot(spectra_results(1,:,i),10*log10(spectra_results(2,:,i)./laser_power_W),...
+        plot(spectra_results(1,:,i),10*log10(spectra_results(2,:,i)./laser_power_mW),...
             "DisplayName", name, ...
             "Color", color, ...
             "LineWidth", 2);
