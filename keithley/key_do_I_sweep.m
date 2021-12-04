@@ -1,28 +1,30 @@
 function [measured_V, measured_I, measured_P] = key_do_I_sweep(...
     key, i_min, i_max, i_step, v_comp, i_comp, settle_time, function_handle)
 % Do a voltage sweep with the specified parameters
-% - key: VISA object with a connected Keithley 2400
-% - i_min: (mA)  minimum current of sweep
-% - i_max: (mA) maximum current of sweep
-% - i_step: (mA) current step of sweep
-% - v_comp: (V) compliance voltage of current source throughout experiment
-% - settle_time: time (in seconds) to pause after each current point on the
-%       sweep prior to taking any further actions
-% - function_handle: function to be executed at each current point in the
-%       sweep (after settle time). This argument is meant to provide a way
-%       to perform ANY measurement you'd like at each current step. This
-%       function will not be called with any arguments, and the return
-%       value(s) will not be accessible.
-
+    % - key: keithley VISA object (see key_start())
+    % - i_min: (mA)  minimum current of sweep
+    % - i_max: (mA) maximum current of sweep
+    % - i_step: (mA) current step of sweep
+    % - v_comp: (V) compliance voltage of current source throughout experiment
+    % - settle_time: time (in seconds) to pause after each current point on the
+    %       sweep prior to taking any further actions
+    % - function_handle: function to be executed at each current point in the
+    %       sweep (after settle time). This argument is meant to provide a way
+    %       to perform ANY measurement you'd like at each current step. This
+    %       function will not be called with any arguments, and the return
+    %       value(s) will not be accessible.
 % This allows a single current sweep function to be used for many types of
     % experiments, and allows swapping out optical equipment with different
     % interfaces in a modular way.
-
 % However, it also means the function handle you pass has to handle
     % everything in a self-contained way, including saving the output to a data
     % structure etc. This is best accomplished simply by configuring the
     % function to store its results in global variables
-
+% Returns:
+    % - measured_V: vector of actual voltages measured at each sample (V)
+    % - measured_I: vector of actual current measured at each sample (mA)
+    % - measured_V: vector of actual power measured at each sample (mW)
+    
     % display warning (but don't necessarily exit) if max curr > compliance
     if(i_max > i_comp)
         warning("Specified current sweep will exceed compliance current!");

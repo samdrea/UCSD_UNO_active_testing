@@ -2,7 +2,7 @@ function key = key_start()
 % KEY_START Connect to Keithley 2400 over GPIB via VISA
 % - key: VISA object returned for communication to/from Keithley
 % This function only needs to be called once, and the same VISA object can
-% then be referenced in all future key_**** function calls 
+% then be referenced (as the first argu
     key = visa('agilent','GPIB0::24::INSTR');
     key.InputBufferSize = 5000;   % set input buffer
     key.OutputBufferSize = 5000;  % set output buffer

@@ -1,5 +1,7 @@
 function key_config_V_source(key, I_compliance)
 % Change Keithley to voltage source and set I compliance (in mA)
+    % - key: keithley VISA object (see key_start())
+    % - I_compliance: compliance current (mA)
     fwrite(key, 'Output off');              % Output OFF before any config
 
     fwrite(key,'rout:term front');          % Use front terminal
