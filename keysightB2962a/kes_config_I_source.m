@@ -1,0 +1,20 @@
+function kes_config_I_source(kes, V_compliance)
+% Change Keithley to current source and set V compliance
+    % - kes: keithley VISA object (see kes_start())
+    % - V_compliance: compliance voltage (V)
+    fwrite(kes, 'Output off');              % Output OFF before any config
+    
+    fwrite(kes,'rout:term front');          % Use front terminal
+    fwrite(kes,'syst:rsen OFF');            % 2-wire connections
+
+    fwrite(kes,'sens:func "volt"');         % Measure function: voltage
+    fwrite(kes,'sour:func curr');           % Source function: current
+
+    fwrite(kes,'sour:CURR:Mode fix')        % Fixed current source mode
+
+    fwrite(kes,'sens:volt:range:auto 1');   % Voltage range: automatic
+    fwrite(kes,'sour:curr:range:auto 1');   % Current range: automatic
+    % Set compliance
+    fwrite(kes, "sens:volt:prot " + num2str(V_compliance));
+end
+

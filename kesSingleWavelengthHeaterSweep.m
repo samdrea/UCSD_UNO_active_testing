@@ -3,11 +3,11 @@
 %% %% Initialize Connections to Laser and Power Supply %% %%
 delete (instrfindall); % Delete all existing instruments
 laser = start_laser(); % Initialize and connect laser
-key = key_start(); % Initialize and connect keithley
+kes = kes_start(); % Initialize and connect keithley
 
 %% %% Acquisition Settings %% %%
 % Laser source settings
-lambda = 1550; % nm, minimum 1454, maximum 1641
+lambda = 1520; % nm, minimum 1454, maximum 1641
 laser_power = 0;  % dBm, min -10 and max 13 (output 2)
 
 % Power supply settings
@@ -22,7 +22,7 @@ laser_power = 0;  % dBm, min -10 and max 13 (output 2)
 sweep_mode = SweepMode.power;
 
 % time to wait after changing power supply prior to taking measurements
-heater_settle_time = 5; % seconds
+heater_settle_time = 0.5; % seconds
 
 % voltage sweep settings (only used if mode is SweepMode.voltage)
 V_start = 0; % volts
@@ -36,13 +36,13 @@ I_step = 10; % mA
 
 % power sweep settings (only used if mode is SweepMode.power)
 P_start = 0; % mW
-P_end = 50; % mW
-P_step = 5; % mW
+P_end = 500; % mW
+P_step = 1; % mW
 
 % complaince settings - Keithley output will never exceed either of these,
 % regardless of the sweep mode!
-I_compliance = 1; % mA
-V_compliance = 50; % volts
+I_compliance = 6; % mA
+V_compliance = 100; % volts
 
 
 %% %% Run Acquisition %% %%
@@ -68,16 +68,16 @@ laser_output(laser, true);
 % and saves the data there (doSingleWavelengthMeasurement)
 switch(sweep_mode) 
     case SweepMode.voltage
-        [measured_V, measured_I, measured_P] = key_do_V_sweep( ...
-            key, V_start, V_end, V_step, V_compliance, I_compliance, ...
+        [measured_V, measured_I, measured_P] = kes_do_V_sweep( ...
+            kes, V_start, V_end, V_step, V_compliance, I_compliance, ...
             heater_settle_time, @doSingleWavelengthMeasurement);
     case SweepMode.current
-        [measured_V, measured_I, measured_P] = key_do_I_sweep( ...
-            key, I_start, I_end, I_step, V_compliance, I_compliance, ...
+        [measured_V, measured_I, measured_P] = kes_do_I_sweep( ...
+            kes, I_start, I_end, I_step, V_compliance, I_compliance, ...
             heater_settle_time, @doSingleWavelengthMeasurement);
     case SweepMode.power
-        [measured_V, measured_I, measured_P] = key_do_P_sweep( ...
-            key, P_start, P_end, P_step, V_compliance, I_compliance, ...
+        [measured_V, measured_I, measured_P] = kes_do_P_sweep( ...
+            kes, P_start, P_end, P_step, V_compliance, I_compliance, ...
             heater_settle_time, @doSingleWavelengthMeasurement);
     otherwise
         laser_output(laser, false);
@@ -106,6 +106,16 @@ laser_power_mW = 10^(laser_power/10);
 plot(measured_P, 10*log10(global_params.results/laser_power_mW));
 xlabel("Heater Power (mW)");
 ylabel("Transmission (dB)");
+%% %% Plot heater IV and instantaneous resistance %% %%
+figure;
+yyaxis left;
+plot(measured_P, measured_V);
+xlabel("Measured power (mW)");
+ylabel("Applied voltage (V)");
+yyaxis right;
+plot(measured_P, measured_V./measured_I);
+ylabel("Resistance (kOhm)");
+
 %% Helper functions
 % single re-usable function to perform spectrum measurement and save
 % result to global variable

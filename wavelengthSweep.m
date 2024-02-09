@@ -1,7 +1,7 @@
 %% Program to acquire single transmission spectrum from 8164B
 %% Initialize Connection to Laser
 delete (instrfindall); % Delete all existing instruments
-laser = start_LMS(); % Initialize and connect laser
+laser = start_laser(); % Initialize and connect laser
 %% Acquisition Parameters
 % Laser source settings (all in nm)
 lambda_start = 1460; % nm, minimum 1460
@@ -13,15 +13,15 @@ laser_power = 0;  %dbm, min TODO and max TODO (on output 2)
 % Optical power meter settings
 range = -10; % dB, will be rounded to nearest 10
 %% Run Acquisition
-N = LMS_set_param(laser,lambda_speed,lambda_step,laser_power,lambda_start,lambda_end,range);
+N = laser_scan_setup(laser,lambda_speed,lambda_step,laser_power,lambda_start,lambda_end,range);
 [lambdaList,transmissionList] = laser_scan(laser,N);
 %% Plot result
+transmissionListmW = transmissionList*1000;
 laser_power_mW = 10^(laser_power/10);
 figure;
-plot(lambdaList, 10*log10(transmissionList/laser_power_mW));
+plot(lambdaList, 10*log10(transmissionListmW/laser_power_mW));
 xlabel("Wavelength");
 ylabel("Transmission (dB)");
-
 %% %% Save Result %% %%
 % Saves all variables into .mat file (locat. picked using GUI)
 [output_filename, output_path] = uiputfile('*', 'Select location to save data:');
