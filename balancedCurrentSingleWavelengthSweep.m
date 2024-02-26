@@ -9,7 +9,7 @@ key = key_start(); % Initialize and connect keithley
 kes = kes_start();
 %% %% Acquisition Settings %% %%
 % REMEMBER TO UPDATE LAMBDA MANUALLY!
-lambda = 1520e-9;
+lambda = 0e-9;
 % time to wait after changing power supply prior to taking measurements
 settle_time = 0;% .5; % seconds
 
@@ -19,78 +19,83 @@ P_step = 1; % mW
 P_list_increasing = 0:P_step:P_end;
 P_list_decreasing = P_end:-P_step:0;
 % assign power lists to instruments
+% "forward"
 kes_power_list = P_list_increasing;
 key_power_list = P_list_decreasing;
+% "backward"
+% kes_power_list = P_list_decreasing;
+% key_power_list = P_list_increasing;
 
 % complaince settings - power supplies never exceed either of these
 I_compliance = 11; % mA
 V_compliance = 130; % volts
-%% %% Run Acquisition %% %%
+%% %% Run Acquisition %% %%until
 % Configure power supplies as voltage sources with the provided compliance
 kes_config_V_source(kes, I_compliance);
 key_config_V_source(key, I_compliance);
 % set output to nonzero on the keysight as otherwise you get a bogus
 % reading (I use 1 volts, it could be anything)
 kes_set_V(kes,1);
-% might need to set kes output voltage nonzero here?
 key_resistance = key_measure_resistance(key);
 kes_resistance = kes_measure_resistance(kes);
 % units: V = sqrt(ohm*W) -> V = sqrt(ohm*mW/1000)
-key_voltage_list = sqrt(key_resistance*(key_power_list/1000));
-kes_voltage_list = sqrt(kes_resistance*(kes_power_list/1000));
-sweep_number = length(key_voltage_list); 
-if(length(kes_voltage_list) ~= length(key_voltage_list))
+% units: I [A] = sqrt(P [W]/R [ohm]) -> I [mA] = sqrt(1000 * P [mW] / R [ohm])
+key_current_list = sqrt(1000*(key_power_list/key_resistance));
+kes_current_list = sqrt(1000*(kes_power_list/kes_resistance));
+% 
+sweep_number = length(key_current_list); 
+if(length(kes_current_list) ~= length(key_current_list))
     error("Keithley and Keysight voltage lists are not the same length");
 end
 % safety warnings
-key_max_voltage = max(key_voltage_list);
-key_est_max_current = 1000*key_max_voltage/key_resistance;
+key_max_current = max(key_current_list);
+key_est_max_voltage = 1e-3*key_resistance*key_max_current;
 disp(['Measured Keithley resistance (ohm): ' num2str(key_resistance,4)]);
 if(key_resistance > 1e6)
     error('Keithley Load resistance greater than 1 Mohm, likely open circuit.');
 end 
-disp(['Max Keithley voltage to be applied: ' num2str(key_max_voltage,4)]);
-if(key_max_voltage > V_compliance)
-    warning("Specified power sweep will exceed compliance voltage on Keithley!");
-    disp(['Compliance voltage: ' num2str(V_compliance,4)]);
-    disp('If you continue, the output (and therefore the power) will be limited by the compliance voltage.');
+disp(['Max Keithley current to be applied: ' num2str(key_max_current,4)]);
+if(key_max_current > I_compliance)
+    warning("Specified power sweep will exceed compliance current on Keithley!");
+    disp(['Compliance current: ' num2str(I_compliance,4)]);
+    disp('If you continue, the output (and therefore the power) will be limited by the compliance current.');
     response = input('Continue (y/n)','s');
     if(response ~= 'y')
         return
     end 
 end
-disp(['Estimated max Keithley current (mA): ' num2str(key_est_max_current,4)]);
-if((key_est_max_current) > I_compliance)
-    warning("Specified power sweep might exceed compliance current!");
-    disp(['Compliance current: ' num2str(I_compliance)]);
-    disp('If you continue, the output (and therefore the power) will be limited by the compliance current.');
+disp(['Estimated max Keithley voltage (V): ' num2str(key_est_max_voltage,4)]);
+if((key_est_max_voltage) > V_compliance)
+    warning("Specified power sweep might exceed compliance voltage!");
+    disp(['Compliance voltage: ' num2str(V_compliance)]);
+    disp('If you continue, the output (and therefore the power) will be limited by the compliance voltage.');
     response = input('Continue (y/n)','s');
     if(response ~= 'y')
         return
     end
 end
 
-kes_max_voltage = max(kes_voltage_list);
-kes_est_max_current = 1000*kes_max_voltage/kes_resistance;
+kes_max_current = max(kes_current_list);
+kes_est_max_voltage = 1e-3*kes_max_current*kes_resistance;
 disp(['Measured Keysight resistance (ohm): ' num2str(kes_resistance,4)]);
 if(kes_resistance > 1e6)
     error('Keysight Load resistance greater than 1 Mohm, likely open circuit.');
 end 
-disp(['Max Keysight voltage to be applied: ' num2str(kes_max_voltage,4)]);
-if(kes_max_voltage > V_compliance)
-    warning("Specified power sweep will exceed compliance voltage on Keysight!");
-    disp(['Compliance voltage: ' num2str(V_compliance,4)]);
-    disp('If you continue, the output (and therefore the power) will be limited by the compliance voltage.');
+disp(['Max Keysight current to be applied: ' num2str(kes_max_current,4)]);
+if(kes_max_current > I_compliance)
+    warning("Specified power sweep will exceed compliance current on Keysight!");
+    disp(['Compliance current: ' num2str(I_compliance,4)]);
+    disp('If you continue, the output (and therefore the power) will be limited by the compliance current.');
     response = input('Continue (y/n)','s');
     if(response ~= 'y')
         return
     end 
 end
-disp(['Estimated max Keysight current (mA): ' num2str(kes_est_max_current,4)]);
-if((kes_est_max_current) > I_compliance)
-    warning("Specified power sweep might exceed compliance current!");
-    disp(['Compliance current: ' num2str(I_compliance)]);
-    disp('If you continue, the output (and therefore the power) will be limited by the compliance current.');
+disp(['Estimated max Keysight voltage (V): ' num2str(kes_est_max_voltage,4)]);
+if((kes_est_max_voltage) > V_compliance)
+    warning("Specified power sweep might exceed compliance voltage!");
+    disp(['Compliance voltage: ' num2str(V_compliance)]);
+    disp('If you continue, the output (and therefore the power) will be limited by the compliance voltage.');
     response = input('Continue (y/n)','s');
     if(response ~= 'y')
         return
@@ -98,9 +103,9 @@ if((kes_est_max_current) > I_compliance)
 end
 % Configure power supplies as voltage sources with the provided compliance
 % AGAIN because otherwise keithley gets stuck in resistance mode (?)
-kes_config_V_source(kes, I_compliance);
-key_config_V_source(key, I_compliance);
-% Set voltage to 0 for safety before turning on
+kes_config_I_source(kes, V_compliance);
+key_config_I_source(key, V_compliance);
+% Set voltage to 0 for safety, we don't know what was on here before
 kes_set_V(kes, 0);
 key_set_V(key, 0);
 % Pre-generate a couple save arrays
@@ -117,71 +122,68 @@ xlabel("Measurement no.");
 ylabel("Optical power (mW)");
 p.YDataSource = 'optical_power';
 
-
 % Setting at beginning 
 settle_index = round(sweep_number/2);
-% WARNING THIS DISRESPECTS VOLTAGE COMPLIANCE RN
-key_set_V(key, key_voltage_list(settle_index));
-kes_set_V(kes, kes_voltage_list(settle_index));
+% WARNING THIS DISRESPECTS CURRENT COMPLIANCE RN
+key_set_I(key, key_current_list(settle_index));
+kes_set_I(kes, kes_current_list(settle_index));
 
 % Turn outputs on
 kes_output(kes, true);
 key_output(key, true);
 
 fprintf("key set to %1.2f, kes set to %1.2f for alignment, press enter to continue...", ...
-    key_voltage_list(settle_index), kes_voltage_list(settle_index));
+    key_current_list(settle_index), kes_current_list(settle_index));
 pause;
 
-for v_index = 1:sweep_number
-
-    % Get voltage, respecting compliance
-    key_voltage_point = key_voltage_list(v_index);
-
-    if(key_voltage_point > V_compliance)
-        warning(['Keithley voltage compliance triggered! Compliance voltage '...
-            num2str(v_comp) ' V used instead of requested voltage '...
-            num2str(key_voltage_point) 'V']);
-        key_voltage_point = v_comp;
+for i_index = 1:sweep_number
+    % Get current, respecting compliance
+    key_current_point = key_current_list(i_index);
+    if(key_current_point > I_compliance)
+        warning(['Keithley current compliance triggered! Compliance current '...
+            num2str(I_compliance) ' mA used instead of requested current '...
+            num2str(key_current_point) 'mA']);
+        key_current_point = I_compliance;
     end
-    % Set Keysight to voltage point
-    % key_set_V(key, key_voltage_point);
+    % Set Keysight to current point
+    key_set_I(key, key_current_point);
 
-    kes_voltage_point = kes_voltage_list(v_index);
-    if(kes_voltage_point > V_compliance)
-        warning(['Keysight voltage compliance triggered! Compliance voltage '...
-            num2str(v_comp) ' V used instead of requested voltage '...
-            num2str(kes_voltage_point) 'V']);
-        kes_voltage_point = v_comp;
+    kes_current_point = kes_current_list(i_index);
+    if(kes_current_point > I_compliance)
+        warning(['Keysight current compliance triggered! Compliance current '...
+            num2str(I_compliance) ' mA used instead of requested current '...
+            num2str(kes_current_point) 'mA']);
+        kes_current_point = I_compliance;
     end
     % Set Keithley to voltage point
-    % kes_set_V(kes, kes_voltage_point);
+    kes_set_I(kes, kes_current_point);
     
     pause(settle_time);
-    if(v_index == 1)
+    if(i_index == 1)
         disp("Settling for 15 seconds at first voltage point...");
         pause(15);
     end
 
     % Measure actual voltage and current after settling
-    [key_measured_V(v_index), key_measured_I(v_index)] = key_measure(key);
-    [kes_measured_V(v_index), kes_measured_I(v_index)] = kes_measure(kes);
-    optical_power(v_index) = laser_get_power(laser);
+    [key_measured_V(i_index), key_measured_I(i_index)] = key_measure(key);
+    [kes_measured_V(i_index), kes_measured_I(i_index)] = kes_measure(kes);
+    optical_power(i_index) = laser_get_power(laser);
     % record time that measurements were completed
-    measurement_times(v_index) = datetime;
+    measurement_times(i_index) = datetime;
     
-    % check if we're hitting i compliance
-    if(key_measured_I(v_index) >= I_compliance)
-        warning('Keithley measured current equals current compliance, current compliance likely triggered!');
+    % check if we're hitting V compliance
+    if(key_measured_V(i_index) >= V_compliance)
+        warning('Keithley measured voltage equals voltage compliance, voltage compliance likely triggered!');
     end
-    if(kes_measured_I(v_index) >= I_compliance)
-        warning('Keithley measured current equals current compliance, current compliance likely triggered!');
+    if(kes_measured_V(i_index) >= V_compliance)
+        warning('Keithley measured voltage equals voltage compliance, voltage compliance likely triggered!');
     end
 
     % Update user with progress
     fprintf("Measurement %d of %d complete (Keysight %1.1f mW, Keithley %1.1f mW) \n", ...
-        v_index, sweep_number, ...
-        kes_measured_V(v_index)*kes_measured_I(v_index), ...
-        key_measured_V(v_index)*key_measured_I(v_index));
+        i_index, sweep_number, ...
+        kes_measured_V(i_index)*kes_measured_I(i_index), ...
+        key_measured_V(i_index)*key_measured_I(i_index));
     refreshdata; drawnow;
 end
     
@@ -201,19 +203,19 @@ plot(key_measured_P, "DisplayName", "Keithley");
 plot(kes_measured_P, "DisplayName", "Keysight");
 ylabel("Applied Power (mW)");
 yyaxis right;
-plot(optical_power);
-%plot(10*log10(optical_power));
-ylabel("Measured Optical Power (mW)");
+%plot(optical_power);T
+plot(10*log10(optical_power));
+ylabel("Measured Optical Power (dBm)");
 hold off; legend;
 %% Plot resistances %%
 figure; hold on;
-plot(key_measured_V./key_measured_I, "DisplayName", "Keithley");
-plot(kes_measured_V./kes_measured_I, "DisplayName", "Keysight");
+plot(key_measured_V(2:end-1)./key_measured_I(2:end-1), "DisplayName", "Keithley");
+plot(kes_measured_V(2:end-1)./kes_measured_I(2:end-1), "DisplayName", "Keysight");
 hold off;
 legend;
     %% %% Save Result %% %%
 % Saves all variables into .mat file (locat. picked using GUI)
-% Variables that are probably the most useful:
+% Variables that are probably the Wmost useful:
 % - measured_I, measured_P, and measured_V give the actual
 %   current/power/voltage output by the Keithley at the beginning of each
 %   spectrum measurement, regardless of sweep mode
@@ -222,7 +224,6 @@ legend;
 [output_filename, output_path] = uiputfile('*', 'Select location to save data:');
 if(output_filename)
     save(strcat(output_path,output_filename));
-    
 else
     disp("File save cancelled");
 end

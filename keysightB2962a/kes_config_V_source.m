@@ -4,11 +4,11 @@ function kes_config_V_source(kes, I_compliance)
     % - I_compliance: compliance current (mA)
     fwrite(kes, 'Output off');              % Output OFF before any config
 
-    fwrite(kes,'rout:term front');          % Use front terminal
-    fwrite(kes,'syst:rsen OFF');            % 2-wire connections
+    %fwrite(kes,'rout:term front');          % Use front terminal
+    %fwrite(kes,'syst:rsen OFF');            % 2-wire connections
 
-    fwrite(kes,'sens:func "CURR"');         % Measure function: current
-    fwrite(kes,'sour:func VOLT');           % Source function: voltage
+    % fwrite(kes,'sens:func "CURR"');         % Measure function: current
+    fwrite(kes,'sour:func:mode volt');           % Source function: voltage
 
     %fwrite(kes,'sour:VOLT:Mode fix')        % Fixed voltage source mode
 

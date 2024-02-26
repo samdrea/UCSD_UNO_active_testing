@@ -1,5 +1,5 @@
 % single wavelength sweep where we change two heaters at the same time 
-% does NOT include laser code as laser is broken :( 
+% does NOT include laser code as laser is broken :(
 % for now, just writing code specially for one of these being keithley and
 % one of these being keysight
 delete (instrfindall); % Delete all existing instruments
@@ -7,11 +7,13 @@ laser = start_laser(); % Initialize and connect laser
 key = key_start(); % Initialize and connect keithley
 kes = kes_start();
 %% %% Acquisition Settings %% %%
+% REMEMBER TO UPDATE LAMBDA MANUALLY!
+lambda = 1595e-9;
 % time to wait after changing power supply prior to taking measurements
-settle_time = 5; % seconds
+settle_time = 0.5; % seconds
 
 P_start = 0; % mW
-P_end = 5; % mW
+P_end = 1000; % mW
 P_step = 1; % mW
 P_list_increasing = 0:P_step:P_end;
 P_list_decreasing = P_end:-P_step:0;
@@ -20,8 +22,8 @@ kes_power_list = P_list_increasing;
 key_power_list = P_list_decreasing;
 
 % complaince settings - power supplies never exceed either of these
-I_compliance = 1; % mA
-V_compliance = 50; % volts
+I_compliance = 11; % mA
+V_compliance = 130; % volts
 %% %% Run Acquisition %% %%
 
 % might need to set kes output voltage nonzero here?
@@ -98,13 +100,19 @@ key_set_V(key, 0);
 key_measured_V = zeros(length(key_voltage_list), 1);
 key_measured_I = zeros(length(key_voltage_list), 1);
 kes_measured_V = zeros(length(key_voltage_list), 1);
-kes_measured_I = zeros(length(key_voltage_list), 1);    
+kes_measured_I = zeros(length(key_voltage_list), 1); 
+optical_power = zeros(length(key_voltage_list), 1); 
+
+% Setting at beginning 
+middle_index = round(sweep_number/2);
+% WARNING THIS DISRESPECTS VOLTAGE COMPLI
 
 % Turn outputs on
 kes_output(kes, true);
 key_output(key, true);
     
 for v_index = 1:sweep_number
+
     % Get voltage, respecting compliance
     key_voltage_point = key_voltage_list(v_index);
 
@@ -126,11 +134,16 @@ for v_index = 1:sweep_number
     end
     % Set Keithley to voltage point
     kes_set_V(kes, kes_voltage_point);
+    if(v_index == 1)
+        disp("Initial settling time...");
+        pause(3);
+    end
     pause(settle_time);
 
     % Measure actual voltage and current after settling
     [key_measured_V(v_index), key_measured_I(v_index)] = key_measure(key);
     [kes_measured_V(v_index), kes_measured_I(v_index)] = kes_measure(kes);
+    optical_power(v_index) = laser_get_power(laser);
 
     % check if we're hitting i compliance
     if(key_measured_I(v_index) >= I_compliance)
@@ -159,9 +172,19 @@ kes_measured_P = kes_measured_I.*kes_measured_V;
 %% Plot Result %%
 figure; hold on;
 yyaxis left;
-plot(key_measured_P);
-plot(kes_measured_P);
-    
+plot(key_measured_P, "DisplayName", "Keithley");
+plot(kes_measured_P, "DisplayName", "Keysight");
+ylabel("Applied Power (mW)");
+yyaxis right;
+plot(10*log10(optical_power));
+ylabel("Measured Optical Power (mW)");
+hold off; legend;
+%% Plot resistances %%
+figure; hold on;
+plot(key_measured_V./key_measured_I, "DisplayName", "Keithley");
+plot(kes_measured_V./kes_measured_I, "DisplayName", "Keysight");
+hold off;
+legend;
     %% %% Save Result %% %%
 % Saves all variables into .mat file (locat. picked using GUI)
 % Variables that are probably the most useful:
