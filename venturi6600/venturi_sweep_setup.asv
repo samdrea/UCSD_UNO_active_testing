@@ -1,0 +1,39 @@
+function sweepDuration = venturi_sweep_setup(ven, startWave, stopWave, inRate)
+    % set up laser for sweep, and return expected num of pts + time spacing
+    % because the sweep only has one trigger at the start :c
+    fwrite(ven, ':CONF:SWEE:MODE CONT'); % continuous sweep mode
+    fwrite(ven, ':CONF:SWEE:TRIG IMME'); % software trigger
+    
+    % make sure everything is a number
+    if(~isnumeric(startWave))
+        error("Sweep start wavelength must be numeric!");
+    end
+    if(~isnumeric(stopWave))
+        error("Sweep stop wavelength must be numeric!");
+    end
+    if(~isnumeric(inRate))
+        error("Sweep rate must be numeric!");
+    end
+    
+    setRate = str2double(venturi_extract_result(...
+        query(ven, sprintf(':CONF:SWEE:RATE %f', inRate))));
+    if(abs(setRate - inRate) >= 0.1)
+        warning('Commanded Venturi to sweep rate %1.1f nm/s, actual rate set to %1.1f nm/s', ...
+            inRate, setRate);
+    end
+    
+    setStart = str2double(venturi_extract_result(...
+        query(ven, sprintf(':CONF:SWEE:STAR %f', startWave))));
+    if(abs(setStart - startWave) >= 0.1)
+        warning('Commanded Venturi to start wavelength %1.2f nm, actual start wavelength set to %1.2f nm', ...
+            inRate, setStart);
+    end
+    setStop = str2double(venturi_extract_result(...
+        query(ven, sprintf(':CONF:SWEE:STOP %f', stopWave))));
+    if(abs(setStop - stopWave) >= 0.1)
+        warning('Commanded Venturi to stop wavelength %1.2f nm, actual stop wavelength to %1.1f nm', ...
+            inRate, setStop);
+    end
+    
+end
+

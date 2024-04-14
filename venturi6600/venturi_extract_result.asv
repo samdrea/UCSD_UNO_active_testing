@@ -1,0 +1,6 @@
+function out = venturi_extract_result(strIn)
+    % extract returned value from venturi VISA return string
+    splitStr = split(strIn)
+    out = splitStr{2}
+end
+
