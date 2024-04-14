@@ -5,7 +5,7 @@ function key_config_I_source(key, V_compliance)
     fwrite(key, 'Output off');              % Output OFF before any config
     
     fwrite(key,'rout:term front');          % Use front terminal
-    fwrite(key,'syst:rsen OFF');            % 2-wire connections
+    %fwrite(key,'syst:rsen OFF');            % 2-wire connections
 
     fwrite(key,'sens:func "volt"');         % Measure function: voltage
     fwrite(key,'sour:func curr');           % Source function: current

@@ -9,7 +9,7 @@ function resistance = key_measure_resistance(key)
     fwrite(key, 'sens:func "res" ');
     
     % auto ohm mode
-    fwrite(key, 'sens:res:mode AUTO');
+    % fwrite(key, 'sens:res:mode AUTO');
     
     % turn on, take measurement, turn off
     key_output(key, true);
@@ -17,7 +17,7 @@ function resistance = key_measure_resistance(key)
     key_output(key, false);
     
     % turn auto-ohm mode back off
-    fwrite(key, 'sens:res:mode MAN');
+    % fwrite(key, 'sens:res:mode MAN');
     
     result_split = regexp(result_string,',','split');       % splits data separted by ','
     

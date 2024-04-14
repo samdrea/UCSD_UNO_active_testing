@@ -9,35 +9,40 @@ key = key_start(); % Initialize and connect keithley
 kes = kes_start();
 %% %% Acquisition Settings %% %%
 % REMEMBER TO UPDATE LAMBDA MANUALLY!
-lambda = 0e-9;
+lambda = 1548e-9;
 % time to wait after changing power supply prior to taking measurements
 settle_time = 0;% .5; % seconds
 
 P_start = 0; % mW
 P_end = 1000; % mW
-P_step = 1; % mW
+P_step = 2; % mW
 P_list_increasing = 0:P_step:P_end;
 P_list_decreasing = P_end:-P_step:0;
 % assign power lists to instruments
 % "forward"
-kes_power_list = P_list_increasing;
-key_power_list = P_list_decreasing;
+% kes_power_list = P_list_increasing;
+% key_power_list = P_list_decreasing;
 % "backward"
-% kes_power_list = P_list_decreasing;
-% key_power_list = P_list_increasing;
+kes_power_list = zeros(size(P_list_decreasing));
+key_power_list = P_list_increasing;
 
 % complaince settings - power supplies never exceed either of these
-I_compliance = 11; % mA
-V_compliance = 130; % volts
+I_compliance = 20; % mA
+V_compliance = 200; % volts
 %% %% Run Acquisition %% %%until
 % Configure power supplies as voltage sources with the provided compliance
 kes_config_V_source(kes, I_compliance);
 key_config_V_source(key, I_compliance);
-% set output to nonzero on the keysight as otherwise you get a bogus
+% set output to nonzero on the keysight as and otherwise you get a bogus
 % reading (I use 1 volts, it could be anything)
 kes_set_V(kes,1);
-key_resistance = key_measure_resistance(key);
-kes_resistance = kes_measure_resistance(kes);
+key_measure_resistance(key)
+kes_measure_resistance(kes)
+pause(1); % just flash these up for visual check that we're still connected
+% 4-port R's (kohm): corner heater has 14.1931, other heater has 14.455
+key_resistance = 14.455e3; % manually measured 4-port heater resistance
+kes_resistance = 14.1931e3;
+%kes_resistance = kes_measure_resistance(kes);
 % units: V = sqrt(ohm*W) -> V = sqrt(ohm*mW/1000)
 % units: I [A] = sqrt(P [W]/R [ohm]) -> I [mA] = sqrt(1000 * P [mW] / R [ohm])
 key_current_list = sqrt(1000*(key_power_list/key_resistance));
@@ -122,17 +127,17 @@ xlabel("Measurement no.");
 ylabel("Optical power (mW)");
 p.YDataSource = 'optical_power';
 
-% Setting at beginning 
-settle_index = round(sweep_number/2);
+% % Setting at beginning 
+settle_index = 1%round(sweep_number/2);
 % WARNING THIS DISRESPECTS CURRENT COMPLIANCE RN
 key_set_I(key, key_current_list(settle_index));
 kes_set_I(kes, kes_current_list(settle_index));
-
+% 
 % Turn outputs on
 kes_output(kes, true);
 key_output(key, true);
-
-fprintf("key set to %1.2f, kes set to %1.2f for alignment, press enter to continue...", ...
+% 
+fprintf("key set to %1.2f, kes set to %1.2f for alignment, press enter to continue... \n", ...
     key_current_list(settle_index), kes_current_list(settle_index));
 pause;
 
@@ -160,8 +165,8 @@ for i_index = 1:sweep_number
     
     pause(settle_time);
     if(i_index == 1)
-        disp("Settling for 15 seconds at first voltage point...");
-        pause(15);
+        disp("Settling for 5 seconds at first voltage point...");
+        pause(5);
     end
 
     % Measure actual voltage and current after settling
@@ -213,8 +218,10 @@ plot(key_measured_V(2:end-1)./key_measured_I(2:end-1), "DisplayName", "Keithley"
 plot(kes_measured_V(2:end-1)./kes_measured_I(2:end-1), "DisplayName", "Keysight");
 hold off;
 legend;
+%% Plot FFT
+plot(abs(fft(optical_power)));
     %% %% Save Result %% %%
-% Saves all variables into .mat file (locat. picked using GUI)
+% Saves all variables into .mat file (locat. pjusticked using GUI)
 % Variables that are probably the Wmost useful:
 % - measured_I, measured_P, and measured_V give the actual
 %   current/power/voltage output by the Keithley at the beginning of each
@@ -227,10 +234,4 @@ if(output_filename)
 else
     disp("File save cancelled");
 end
-
-%% %% Plot Result %% %%
-laser_power_mW = 10^(laser_power/10);
-plot(measured_P, 10*log10(global_params.results/laser_power_mW));
-xlabel("Heater Power (mW)");
-ylabel("Transmission (dB)");
 
