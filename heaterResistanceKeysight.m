@@ -9,9 +9,9 @@ contact = twoWire - fourWire;
 fprintf("2-wire = %f, 4-wire = %f, diference = %f \n", twoWire, fourWire, contact);
 %% Current sweep
 i_min = 0;
-i_max = 50;
+i_max = 100;
 i_step = 1;
-v_comp = 20;
+v_comp = 40;
 i_comp = i_max;
 settle_time = 0;
 function_handle = @doNothing;

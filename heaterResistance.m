@@ -2,6 +2,8 @@ clear;
 delete (instrfindall); % Delete all existing instruments
 key = key_start(); % Initialize and connect keithley
 %%
+fwrite(key, 'sens:res:mode MAN');
+key_config_I_source(key, 10);
 key_set_I(key, 0.1);
 [twoWire, fourWire] = key_contact_resistance(key);
 contact = twoWire - fourWire;

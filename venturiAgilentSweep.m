@@ -4,12 +4,12 @@ clear; delete(instrfindall);
 ven = venturi_connect();
 agi = start_laser(); % legacy function name, not using laser on Agilent
 %% Setup sweep
-startWavelength = 1520;
-stopWavelength = 1630;
-sweepRate = 10;
+startWavelength = 1550;
+stopWavelength = 1600;
+sweepRate = 2;
 wavelengthStep = 0.01;
 laserPower = 3; % dBm, 0 to 10
-powerMeterRange = -50; % dBm, multiples of 10 from -60 to 10
+powerMeterRange = -60; % dBm, multiples of 10 from -60 to 10
 
 venturi_set_power(ven, laserPower);
 [actualRange, actualRate] = venturi_sweep_setup(ven, sweepRate, startWavelength, stopWavelength);
