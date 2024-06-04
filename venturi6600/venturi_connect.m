@@ -4,6 +4,6 @@ function ven = venturi_connect()
     ven.OutputBufferSize = 5000;  % set output buffer
     ven.Timeout=10; % set maximum waiting time [s]  
     fopen(ven); % open communication channel
-    query(ven, '*IDN?') % enquires equipment info
+    disp(query(ven, '*IDN?')); % enquires equipment info
 end
 

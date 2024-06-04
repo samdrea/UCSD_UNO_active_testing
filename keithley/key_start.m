@@ -8,7 +8,6 @@ function key = key_start()
     key.OutputBufferSize = 5000;  % set output buffer
     key.Timeout=10; % set maximum waiting time [s]  
     fopen(key); % open communication channel
-    query(key, '*IDN?') % enquires equipment info
-    disp('key created');
+    disp(query(key, '*IDN?')); % enquires equipment info
 end
 

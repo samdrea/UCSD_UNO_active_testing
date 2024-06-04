@@ -1,61 +1,61 @@
 % single wavelength sweep where we change two heaters at the same time 
-% does NOT include laser code as laser is broken :(
 % for now, just writing code specially for one of these being keithley and
 % one of these being keysight
 clear;
 delete (instrfindall); % Delete all existing instruments
-laser = start_laser(); % Initialize and connect laser
+agi = start_laser(); % Initialize and connect Agilent power meter
+ven = venturi_connect();
 key = key_start(); % Initialize and connect keithley
 kes = kes_start();
+%% Check that things are in contact
+kes_set_4wire(kes, false);
+kes_config_I_source(kes, 10);
+kes_set_I(kes, 1);
+kes_measure_resistance(kes)
+key_set_4wire(key, false);
+key_config_I_source(key, 10);
+key_set_I(key, 1);
+key_measure_resistance(key)
+
 %% %% Acquisition Settings %% %%
-% REMEMBER TO UPDATE LAMBDA MANUALLY!
-lambda = 0e-9;
 % time to wait after changing power supply prior to taking measurements
-settle_time = 0.2;% .5; % seconds
+settle_time = 0;% .5; % seconds
 
 P_start = 0; % mW
-P_end = 1500; % mW
-P_step = 4; % mW
+P_end = 2001; % mW
+P_step = 3; % mW
 P_list_increasing = 0:P_step:P_end;
 P_list_decreasing = P_end:-P_step:0;
 % assign power lists to instruments
-% "backward" balanced
-% kes_power_list = P_list_decreasing;
-% key_power_list = P_list_increasing;
-% "forward" balanced
+% "forward"
 kes_power_list = P_list_increasing;
 key_power_list = P_list_decreasing;
-
-% unbalanced
-% kes_power_list = [P_list_decreasing, zeros(size(P_list_increasing))];
-% key_power_list = [zeros(size(P_list_decreasing)), P_list_increasing];
-% one side only
-% kes_power_list = zeros(size(P_list_increasing));
+% "backward"
+% kes_power_list = zeros(size(P_list_decreasing));
 % key_power_list = P_list_increasing;
 
 % complaince settings - power supplies never exceed either of these
-I_compliance = 55; % mA
-V_compliance = 55; % volts
+I_compliance = 70; % mA
+V_compliance = 75; % volts
 
-%
-start_pause_time = 30;
+start_pause_time = 15;
 %% %% Run Acquisition %% %%
 % Configure power supplies as voltage sources with the provided compliance
 kes_config_V_source(kes, I_compliance);
 key_config_V_source(key, I_compliance);
 % set output to nonzero on the keysight as and otherwise you get a bogus
 % reading (I use 1 volts, it could be anything)
-kes_set_V(kes,1);
-key_measure_resistance(key)
-kes_measure_resistance(kes)
-pause(1); % just flash these up for visual check that we're still connected
+% kes_set_V(kes,1);
+% key_measure_resistance(key);
+% kes_measure_resistance(kes);
+% pause(1); % just flash these up for visual check that we're still connected
 % 4-port R's (kohm): corner heater has 14.1931, other heater has 14.455
 % key_resistance = 14.455e3; % manually measured 4-port heater resistance
 % kes_resistance = 14.1931e3;
-key_resistance = 930; % approximate resistances of the two heaters
-kes_resistance = 930;
-%key_resistance = 727; % approximate resistances of the two heaters
-%kes_resistance = 727;
+key_resistance = 928.6; % approximate resistances of the two heaters
+kes_resistance = 928.2;
+% key_resistance = 727; % approximate resistances of the two heaters
+% kes_resistance = 727;
 %kes_resistance = kes_measure_resistance(kes);
 % units: V = sqrt(ohm*W) -> V = sqrt(ohm*mW/1000)
 % units: I [A] = sqrt(P [W]/R [ohm]) -> I [mA] = sqrt(1000 * P [mW] / R [ohm])
@@ -135,6 +135,7 @@ kes_measured_I = zeros(sweep_number, 1);
 optical_power = zeros(sweep_number, 1); 
 measurement_times = NaT(sweep_number, 1);
 % Set up live plot of interferogram, don't worry about power scaling
+f = figure;
 p = plot(optical_power);
 xlim([0, sweep_number]);
 xlabel("Measurement no.");
@@ -187,7 +188,7 @@ for i_index = 1:sweep_number
     % Measure actual voltage and current after settling
     [key_measured_V(i_index), key_measured_I(i_index)] = key_measure(key);
     [kes_measured_V(i_index), kes_measured_I(i_index)] = kes_measure(kes);
-    optical_power(i_index) = laser_get_power(laser);
+    optical_power(i_index) = laser_get_power(agi);
     % record time that measurements were completed
     measurement_times(i_index) = datetime;
     
@@ -214,8 +215,6 @@ key_output(key, false);
 % Calculate actual power (in mW) off of all the individual measurements
 key_measured_P = key_measured_I.*key_measured_V;
 kes_measured_P = kes_measured_I.*kes_measured_V;
-        
-        
 %% Plot Result %%
 figure; hold on;
 yyaxis left;
@@ -224,7 +223,7 @@ plot(kes_measured_P, "DisplayName", "Keysight");
 ylabel("Applied Power (mW)");
 yyaxis right;
 %plot(optical_power);T
-plot(10*log10(optical_power));
+plot(10*log10(abs(optical_power)));
 ylabel("Measured Optical Power (dBm)");
 hold off; legend;
 %% Plot resistances %%
@@ -232,16 +231,15 @@ figure; hold on;
 plot(key_measured_V(2:end-1)./key_measured_I(2:end-1), "DisplayName", "Keithley");
 plot(kes_measured_V(2:end-1)./kes_measured_I(2:end-1), "DisplayName", "Keysight");
 hold off;
-%ylim([15.5, 17.5]);
 legend;
 %% Plot detrended
-detrended = optical_power./movmean(optical_power,10);
+detrended = optical_power - movmean(optical_power,3);
+%detrended = optical_power./movmean(optical_power,3) - 1;
 figure;
 plot(detrended);
-%% Plot interpolated detrended
-plot(interpft(detrended, 8*length(detrended)));
 %% Plot FFT
-semilogy(abs(fft(detrended)));
+figure;
+plot(abs(fft(detrended)));
 %% %% Save Result %% %%
 % Saves all variables into .mat file (locat. pjusticked using GUI)
 % Variables that are probably the Wmost useful:
@@ -253,7 +251,6 @@ semilogy(abs(fft(detrended)));
 [output_filename, output_path] = uiputfile('*', 'Select location to save data:');
 if(output_filename)
     save(strcat(output_path,output_filename));
-    disp("File save complete");
 else
     disp("File save cancelled");
 end

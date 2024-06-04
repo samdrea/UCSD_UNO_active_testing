@@ -12,7 +12,7 @@ fprintf("2-wire = %f, 4-wire = %f, diference = %f \n", twoWire, fourWire, contac
 i_min = 0;
 i_max = 100;
 i_step = 5;
-v_comp = 40;
+v_comp = 100;
 i_comp = i_max;
 settle_time = 0;
 function_handle = @doNothing;
@@ -31,7 +31,7 @@ plot(measured_I(2:end), 1e3*diff(measured_V)./diff(measured_I), "DisplayName", "
 ylabel("Resistance (ohm)");
 hold off; legend;
 %% "Soak" test - see if heater lasts for 1 minute at X current
-soak_I = 0.1; % mA
+soak_I = 60; % mA
 soak_duration = 60; % s
 soak_interval = 1; % s
 sweep_number = round(soak_duration/soak_interval);

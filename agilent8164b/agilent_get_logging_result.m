@@ -35,6 +35,21 @@ function readingArray = getChannelResults(agi, channel, extraBytes, numBytes)
         theseBytes = dataIn(byteIdx+1:byteIdx+4);
         readingArray(readingIdx) = typecast(uint8(theseBytes), 'single');
     end
+    
+    y = dataIn;
+    N = numReadings;
+    yh = dec2hex(y);
+    Ly = length(num2str(4*N));
+    if(char(y(1)) == '#')
+        pow = zeros(1,N);
+        for i = 1:N
+            j = 2+Ly+4*i;
+            % convert strange byte order arrays to single floats
+            ydec = [yh(j,:) yh(j-1,:) yh(j-2,:) yh(j-3,:)];
+            hexbits = uint32(hex2dec(ydec));
+            pow(i) = typecast(hexbits, 'single');
+        end
+    end
 end
 
 

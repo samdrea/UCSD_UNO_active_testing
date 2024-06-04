@@ -1,53 +1,50 @@
 clear;
 delete (instrfindall); % Delete all existing instruments
-kes = kes_start(); % Initialize and connect keithley
+key = key_start(); % Initialize and connect keithley
 %%
-kes_config_I_source(kes, 0.1)
-kes_set_I(kes, 0.1);
-[twoWire, fourWire] = kes_contact_resistance(kes);
+key_config_I_source(key, 0.1)
+key_set_I(key, 0.1);
+[twoWire, fourWire] = key_contact_resistance(key);
 contact = twoWire - fourWire;
 fprintf("2-wire = %f, 4-wire = %f, diference = %f \n", twoWire, fourWire, contact);
 %% Current sweep, with repeats.
-numRepeats = 10;
+numRepeats = 20;
 i_min = 0;
-i_max = 100;
-i_step = 5;
+i_max = 250;
+i_step = 10;
 i_list = i_min:i_step:i_max;
 i_num = length(i_list);
-v_comp = 100;
+v_comp = 21;
 i_comp = i_max;
 settle_time = 0;
-time_between_repeats = 10;
 function_handle = @doNothing;
-kes_set_4wire(kes, true);
+key_set_4wire(key, true);
 saveArray = zeros(i_num, 2, numRepeats);
 for repeatIdx = 1:numRepeats
-    thisList = i_list;
-%     if(mod(repeatIdx,2))
-%         thisList = i_list;
-%     else
-%         thisList = flip(i_list);
-%     end
-    [measured_V, measured_I, ~] = kes_do_I_list(...
-        kes, thisList, v_comp, i_comp, settle_time, function_handle);
+    if(mod(repeatIdx,2))
+        thisList = i_list;
+    else
+        thisList = flip(i_list);
+    end
+    [measured_V, measured_I, ~] = key_do_I_list(...
+        key, thisList, v_comp, i_comp, settle_time, function_handle);
     saveArray(:, :, repeatIdx) = [measured_V,measured_I];
-    pause(time_between_repeats);
 end
 
 %% Plot repeats overlaid
 figure; hold on;
 colors = cool(numRepeats);
 for repeatIdx = 1:numRepeats
-    plot(saveArray(2:end,1,repeatIdx)./saveArray(2:end,2,repeatIdx), "Color", colors(repeatIdx, :));
+    plot(saveArray(:,2,repeatIdx), saveArray(:,1,repeatIdx), "Color", colors(repeatIdx, :));
+    pause;
 end
 %% Random list
-numIndividPts = 500;
+numIndividPts = 1000;
 i_list = i_max * rand(numIndividPts);
-[measured_V, measured_I, ~] = kes_do_I_list(...
-        kes, i_list, v_comp, i_comp, settle_time, function_handle);
+[measured_V, measured_I, ~] = key_do_I_list(...
+        key, i_list, v_comp, i_comp, settle_time, function_handle);
 %%
-%plot(measured_I, measured_V, '.');
-plot(measured_I, measured_V./measured_I, '.');
+plot(measured_I, measured_V, '.');
 %% save result
 [output_filename, output_path] = uiputfile('*', 'Select location to save data:');
 if(output_filename)

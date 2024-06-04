@@ -8,6 +8,6 @@ function kes = kes_start()
     kes.OutputBufferSize = 5000;  % set output buffer
     kes.Timeout=10; % set maximum waiting time [s]  
     fopen(kes) % open communication channel
-    query(kes, '*IDN?') % enquires equipment info
+    disp(query(kes, '*IDN?')); % enquires equipment info
 end
 

@@ -7,28 +7,38 @@ delete (instrfindall); % Delete all existing instruments
 laser = start_laser(); % Initialize and connect laser
 key = key_start(); % Initialize and connect keithley
 kes = kes_start();
+%% Check that things are in contact
+kes_set_4wire(kes, false);
+kes_config_I_source(kes, 10);
+kes_set_I(kes, 0.1);
+kes_measure_resistance(kes)
+key_set_4wire(key, false);
+key_config_I_source(key, 10);
+key_set_I(key, 0.1);
+key_measure_resistance(key)
+
 %% %% Acquisition Settings %% %%
 % REMEMBER TO UPDATE LAMBDA MANUALLY!
-lambda = 1548e-9;
+lambda = 1550e-9;
 % time to wait after changing power supply prior to taking measurements
 settle_time = 0;% .5; % seconds
 
 P_start = 0; % mW
-P_end = 1000; % mW
-P_step = 2; % mW
+P_end = 3000; % mW
+P_step = 30; % mW
 P_list_increasing = 0:P_step:P_end;
 P_list_decreasing = P_end:-P_step:0;
 % assign power lists to instruments
 % "forward"
-% kes_power_list = P_list_increasing;
-% key_power_list = P_list_decreasing;
+kes_power_list = P_list_increasing;
+key_power_list = P_list_decreasing;
 % "backward"
-kes_power_list = zeros(size(P_list_decreasing));
-key_power_list = P_list_increasing;
+% kes_power_list = zeros(size(P_list_decreasing));
+% key_power_list = P_list_increasing;
 
 % complaince settings - power supplies never exceed either of these
-I_compliance = 20; % mA
-V_compliance = 200; % volts
+I_compliance = 80; % mA
+V_compliance = 50; % volts
 %% %% Run Acquisition %% %%until
 % Configure power supplies as voltage sources with the provided compliance
 kes_config_V_source(kes, I_compliance);
@@ -40,8 +50,8 @@ key_measure_resistance(key)
 kes_measure_resistance(kes)
 pause(1); % just flash these up for visual check that we're still connected
 % 4-port R's (kohm): corner heater has 14.1931, other heater has 14.455
-key_resistance = 14.455e3; % manually measured 4-port heater resistance
-kes_resistance = 14.1931e3;
+key_resistance = 680.09; % manually measured 4-port heater resistance
+kes_resistance = 680.09;
 %kes_resistance = kes_measure_resistance(kes);
 % units: V = sqrt(ohm*W) -> V = sqrt(ohm*mW/1000)
 % units: I [A] = sqrt(P [W]/R [ohm]) -> I [mA] = sqrt(1000 * P [mW] / R [ohm])
@@ -128,7 +138,7 @@ ylabel("Optical power (mW)");
 p.YDataSource = 'optical_power';
 
 % % Setting at beginning 
-settle_index = 1%round(sweep_number/2);
+settle_index = 1; %round(sweep_number/2);
 % WARNING THIS DISRESPECTS CURRENT COMPLIANCE RN
 key_set_I(key, key_current_list(settle_index));
 kes_set_I(kes, kes_current_list(settle_index));
@@ -136,7 +146,8 @@ kes_set_I(kes, kes_current_list(settle_index));
 % Turn outputs on
 kes_output(kes, true);
 key_output(key, true);
-% 
+key_measure(key);
+% Doing this is needed to turn on Keithley for some reason
 fprintf("key set to %1.2f, kes set to %1.2f for alignment, press enter to continue... \n", ...
     key_current_list(settle_index), kes_current_list(settle_index));
 pause;
@@ -209,7 +220,7 @@ plot(kes_measured_P, "DisplayName", "Keysight");
 ylabel("Applied Power (mW)");
 yyaxis right;
 %plot(optical_power);T
-plot(10*log10(optical_power));
+plot(10*log10(abs(optical_power)));
 ylabel("Measured Optical Power (dBm)");
 hold off; legend;
 %% Plot resistances %%

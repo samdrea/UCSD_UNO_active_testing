@@ -21,7 +21,10 @@ function didFinish = agilent_wait_for_logging(agi, maxWaitTime)
             if(waitIdx == 1)
                 disp('Agilent power meter logging in progress...');
             else
-                disp('.'); % dot dot dot loading
+                fprintf('.'); % dot dot dot loading
+                if(mod(waitIdx,10) == 0)
+                    fprintf('\n');
+                end
             end
         else
             % we got some other response, error and print it

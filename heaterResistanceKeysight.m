@@ -41,7 +41,7 @@ plot(measured_I(2:end), 1e3*diff(measured_V)./diff(measured_I), "DisplayName", "
 ylabel("Resistance (ohm)");
 hold off; legend;
 %% "Soak" test - see if heater lasts for 1 minute at X current
-soak_I = 0.1; % mA
+soak_I = 30; % mA
 soak_duration = 60; % s
 soak_interval = 1; % s
 sweep_number = round(soak_duration/soak_interval);
@@ -50,8 +50,8 @@ measured_V_soak = zeros(sweep_number, 1);
 measured_R_soak = zeros(sweep_number, 1);
 measurement_times = NaT(sweep_number, 1);
 %
-key_set_I(key, soak_I);
-key_config_I_source(key, v_comp);
+kes_set_I(kes, soak_I);
+kes_config_I_source(kes, v_comp);
 %
 p = plot(measured_R_soak);
 xlim([0, sweep_number]);
@@ -59,15 +59,15 @@ xlabel("Measurement no.");
 ylabel("Resistance (kOhm)");
 p.YDataSource = 'measured_R_soak';
 
-key_output(key, true);
+kes_output(kes, true);
 for i = 1:sweep_number
-    [measured_V_soak(i), measured_I_soak(i)] = key_measure(key);
+    [measured_V_soak(i), measured_I_soak(i)] = kes_measure(kes);
     measured_R_soak = measured_V_soak ./ measured_I_soak;
     measurement_times(i) = datetime;
     pause(soak_interval);
     refreshdata; drawnow;
 end
-key_output(key, false);
+kes_output(kes, false);
 disp("Done!");
 %% save result
 [output_filename, output_path] = uiputfile('*', 'Select location to save data:');
