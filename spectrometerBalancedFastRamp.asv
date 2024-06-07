@@ -1,0 +1,48 @@
+% spectrometer sweep where we quickly ramp two heaters at the same time 
+% using channels 1 and 2 on keithley
+clear;
+delete (instrfindall); % Delete all existing instruments
+agi = start_laser(); % Initialize and connect Agilent power meter
+% ven = venturi_connect(); % Connect to Venturi laser
+kes = kes_start(); % Connect to keysight
+%% Sweep parameters and send to equipment
+
+
+
+low_voltage = 0;
+high_voltage = 1;
+num_repeat = 1;
+i_compliance = 1e-3;
+start_time = 0.5;
+ramp_time = 1;
+end_time = 0.5;
+
+total_time = start_time + ramp_tim
+
+% "background" voltages - what is on when the ramp isn't running?
+background_voltage_1 = 0.5;
+background_voltage_2 = 0.5;
+
+% channel 1 up-ramp
+kes_setup_lin_volt_ramp(...
+            kes, ... % keysight VISA object
+            1, ... % output channel, 1 or 2
+            num_repeat, ... % repeat ramp this many times
+            start_time, ... % begin ramp this long after trigger (s)
+            ramp_time, ... % take this long to ramp up (s)
+            end_time, ... % stay at end voltage for this long (s)
+            low_voltage, ... % start voltage (V)
+            high_voltage, ... % end voltage (V)
+            i_compliance); % compliance current (A)
+kes_set_V(kes, background_voltage_1, 1);
+% channel 2 down-ramp
+kes_setup_lin_volt_ramp(kes,  2, num_repeat, start_time, ... 
+            ramp_time, end_time, high_voltage, low_voltage, i_compliance);
+kes_set_V(kes, background_voltage_2, 2);
+% note: might want to turn on outputs here
+%% Run sweep
+kes_trig_ramp(kes);
+% blocking pause, fix this
+pause(start_time + ramp_time + end_time + 1);
+% turn off outputs
+kes_output(kes, false);
