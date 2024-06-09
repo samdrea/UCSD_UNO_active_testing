@@ -1,5 +1,5 @@
-function kes_trig_ramp(kes)
-    % triggers linear ramps on BOTH channels!
+function kes_trig_sweep(kes)
+    % triggers sweeps on BOTH channels!
     % TODO make this a setting - simply switch between the following
     % arguments:
     % (@1) for 1 only

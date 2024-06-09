@@ -47,6 +47,19 @@ kes_setup_lin_volt_ramp(kes,  2, num_repeat, start_time, ...
             ramp_time, end_time, high_voltage, low_voltage, i_compliance);
 kes_set_V(kes, background_voltage_2, 2);
 % note: might want to turn on outputs here
+%%
+volt_list = linspace(0,1,100).^(1/2);
+time_step = 1e-2; % 10 ms
+compliance_current = 1e-3; % 1 mA
+kes_setup_user_sequence(...
+            kes, ... % keysight VISA object
+            1, ... % output channel, 1 or 2
+            'voltage', ... % supply type 'voltage' or 'current'
+            volt_list, ... % list of voltage (V) or current (A) levels
+            time_step, ... % how long each point should last
+            compliance_current); % compliance current (A) or voltage (V) (corresponding to supply type)
+kes_setup_user_sequence(kes, 2, 'voltage', ... 
+            flip(volt_list), time_step, compliance_current);
 %% Run sweep
 agilent_arm_logging(agi, detector_range);
 kes_trig_ramp(kes);
