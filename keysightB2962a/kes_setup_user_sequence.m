@@ -80,7 +80,8 @@ function kes_setup_user_sequence(...
     end
     % verify all the data got sent, just check # of pts (if it got right
     % number, those points are probably correct)
-    received_num_pts = str2double(query(kes, ':SOUR1:ARB:VOLT:UDEF:LEV:POIN?'));
+    num_pts_query = sprintf(':SOUR%d:ARB:%s:UDEF:LEV:POIN?', channel, supply);
+    received_num_pts = str2double(query(kes, num_pts_query));
     if(received_num_pts ~= length(level_list))
         error(['Number of points received by power supply (%d) does not ' ...
             'match number of points we sent (%d)! If this happens more ' ...

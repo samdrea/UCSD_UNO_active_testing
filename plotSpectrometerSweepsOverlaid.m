@@ -39,8 +39,24 @@ for i = 1:numFiles
 end
 hold off; legend();
 xlabel("Arb. FFT x axis units that I don't feel like scaling"); ylabel("Power spectral density");
+%% Plot vs. timestamp
+figure;
+for i = 1:numFiles
+    load(fullfile(location, file{i}), ...
+        'key_measured_I', 'key_measured_V', 'key_measured_P', ...
+        'kes_measured_I', 'kes_measured_V', 'kes_measured_P', ...
+        'optical_power', 'measurement_times', 'lambda');
+    thisDetrended = optical_power./movmean(optical_power,10);
+    %plot(kes_measured_P - key_measured_P, thisDetrended - 1, 'DisplayName', file{i});
+    plot(seconds(measurement_times - measurement_times(1)), optical_power, 'DisplayName', file{i});
+    
+    if(i == 1)
+        hold on;
+    end
+end
+hold off; legend();
+xlabel("Time (s)"); ylabel("Optical powoer (mW)");
 %% Sweep durations
-
 sweepTimes = []; sweepLambdas = []; sweepTimeSteps = [];
 for i = 1:numFiles
     load(fullfile(location, file{i}), 'measurement_times', 'lambda');
