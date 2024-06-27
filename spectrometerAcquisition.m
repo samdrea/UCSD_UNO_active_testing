@@ -4,7 +4,7 @@
 clear;
 delete (instrfindall); % Delete all existing instruments
 agi = start_laser(); % Initialize and connect Agilent power meter
-ven = venturi_connect();
+%ven = venturi_connect();
 key = key_start(); % Initialize and connect keithley
 kes = kes_start();
 %% Check that things are in contact
@@ -13,6 +13,7 @@ kes_config_I_source(kes, 10);
 kes_set_I(kes, 1);
 kes_measure_resistance(kes)
 key_set_4wire(key, false);
+fwrite(key, 'sens:res:mode MAN');
 key_config_I_source(key, 10);
 key_set_I(key, 1);
 key_measure_resistance(key)
@@ -178,7 +179,7 @@ for i_index = 1:sweep_number
     % Set Keithley to voltage point
     kes_set_I(kes, kes_current_point);
     
-    key_measure(key); % needed to make keithley actually output???
+    %key_measure(key); % needed to make keithley actually output???
     pause(settle_time);
     if(i_index == 1)
         fprintf("Settling for %f seconds at first voltage point...", start_pause_time);

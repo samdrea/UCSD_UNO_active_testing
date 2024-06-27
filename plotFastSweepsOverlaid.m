@@ -10,10 +10,10 @@ figure;
 for i = 1:numFiles
     load(fullfile(location, file{i}), ...
         'time_array', 'channel1', 'channel2');
-    %thisDetrended = channel1./movmean(channel1,10) - 1;
-    thisDetrended = channel1 - movmean(channel1,10);
+    thisDetrended = channel1./movmean(channel1,50) - 1;
+    %thisDetrended = channel1 - movmean(channel1,100);
     plot(time_array, thisDetrended, 'DisplayName', file{i});
-    %plot(time_array, optical_power, 'DisplayName', file{i});
+    %plot(time_array, channel1, 'DisplayName', file{i});
     
     if(i == 1)
         hold on;
@@ -26,8 +26,8 @@ figure;
 for i = 1:numFiles
    load(fullfile(location, file{i}), ...
         'time_array', 'channel1', 'channel2');
-    %thisDetrended = channel1./movmean(channel1,10) - 1;
-    thisDetrended = channel1 - movmean(channel1,10);
+    thisDetrended = channel1./movmean(channel1,75) - 1;
+    %thisDetrended = channel1 - movmean(channel1,100);
     thisFFT = abs(fft(thisDetrended-1)).^2;
     thisIdx = 1:round(length(thisFFT)/2);
     semilogy(thisFFT(thisIdx)); %, 'DisplayName', sprintf("%1.0fnm", 1e9*lambda));

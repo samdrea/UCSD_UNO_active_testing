@@ -105,6 +105,12 @@ function kes_setup_user_sequence(...
     fwrite(kes,':TRIG1:TRAN:TOUT:STAT 1');
     % choose output port
     fwrite(kes,':TRIG1:TRAN:TOUT:SIGN EXT2');
+    % configure that output port for the task
+    fwrite(kes, ":dig:ext2:func TOUT"); % output trigger
+    fwrite(kes, ":dig:ext2:pol POS"); % positive polarity
+    fwrite(kes, ":dig:ext2:tout:pos BEF"); % trigger before event
+    fwrite(kes, ":dig:ext2:tout:widt max"); % max trigger width
+    fwrite(kes, ":dig:ext2:tout:type EDGE"); % edge type trigger
     % wait until previous commands are processed
     fwrite(kes,'*WAI');
     % enable output

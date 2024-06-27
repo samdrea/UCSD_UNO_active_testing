@@ -10,7 +10,7 @@ figure; hold on;
 for i = 1:numFiles
     clear channel1 channel2 lambdaArray
     load(fullfile(location, file{i}), 'channel1', 'channel2', 'lambdaArray');
-    plot(lambdaArray, 10*log10(channel1./channel2), 'DisplayName', file{i});
+    plot(lambdaArray, 10*log10(channel1), 'DisplayName', file{i});
 end
 hold off; legend();
 xlabel("Wavelength (nm)"); ylabel("Transmission (dB)");
@@ -19,7 +19,7 @@ figure;
 for i = 1:numFiles
     clear channel1 channel2 lambdaArray
     load(fullfile(location, file{i}), 'channel1', 'channel2', 'lambdaArray');
-    thisTransmission = channel1./channel2;
+    thisTransmission = channel1; %./channel2;
     thisTransNorm = thisTransmission; %/max(thisTransmission);
     %thisTransNorm = 10*log10(thisTransmission/max(thisTransmission)); l
     thisFFT = abs(fft(thisTransNorm)).^2;
