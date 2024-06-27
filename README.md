@@ -1,6 +1,6 @@
 # UCSD_UNO_active_testing
 
-Repository with ready-to-use MATLAB scripts to perform common active characterization experiments.
+Repository with ready-to-use MATLAB scripts to perform common active characterization experiments. NOTE: the documentation below is quite, quite old, and this repo has gotten very messy. One day I will organize this code again to the general ideas/standards outlined below.
 
 ## Download & Use
 
