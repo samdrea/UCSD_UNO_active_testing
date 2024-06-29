@@ -17,8 +17,8 @@ agi = start_laser(); % Initialize the OSA... was the old laser
 startWavelength = 1540; % nm
 stopWavelength = 1560; % nm
 sweepRate = 10; % nm/s (limited by venturi collection rate)
-wavelengthStep = 0.0025; 
-laserPower = 9.9; % dBm, 0 to 9.9
+wavelengthStep = 0.25; 
+laserPower = 4; % dBm, 0 to 9.9
 
 % Setup laser 
 venturi_set_power(ven, laserPower);
@@ -34,10 +34,10 @@ numPts = actualRange/wavelengthStep;
 lambdaArray = startWavelength + wavelengthStep*(0.5 + 0:(numPts));
 
 % Setup the range of intensity the OSA will collect data from?
-powerMeterRange1 = -60; % dBm, multiples of 10 from -60 to 10
+powerMeterRange1 = -20; % dBm, multiples of 10 from -60 to 10
 powerMeterRange2 = 10; % dBm, multiples of 10 from -60 to 10
 
-% Setup the OSA 
+% Setup the OSA (photo detector)
 agilent_set_range(agi, powerMeterRange1, 1);
 agilent_set_range(agi, powerMeterRange2, 2);  % Probably will not need this?
 agilent_setup_logging(agi, numPts, avgTime);
@@ -53,7 +53,7 @@ venturi_output(ven, true); % Configure laser to output signal to OSA
 
 % Sweep laser... why is there two?
 venturi_sweep_run(ven); 
-venturi_sweep_run(ven);
+%venturi_sweep_run(ven);
 
 % Check if OSA logged data successfully
 loggingSuccessful = agilent_wait_for_logging(agi, max_wait_time);
@@ -64,7 +64,7 @@ else
     warning("Logging did not finish.");
 end
 
-%% 
+%%
 % Plot Wavelength vs Power
 figure; hold on;
 plot(lambdaArray, 10*log10(abs(channel1)) + 30);
