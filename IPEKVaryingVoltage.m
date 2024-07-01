@@ -50,8 +50,6 @@ disp(test_array);
 % [voltage, current] = key_measure(key);
 % disp(voltage);
 
-
-  
 %% Actual Sweep
 % Sweep Keithley and collect data 
 [measured_V, measured_I, measured_P] = key_do_V_sweep(...
