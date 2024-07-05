@@ -17,7 +17,7 @@ ven = venturi_connect(); % Initialize the laser
 % Prep Agilent photo detector parameters
 powerMeterRange1 = -20; % dBm, multiples of 10 from -60 to 10
 agilent_set_range(agi, powerMeterRange1, 1);
-global agilent_results;
+global agilent_results; % mW
 agilent_results = [];
 
 % Keithley voltage source sweep parameters
@@ -63,10 +63,14 @@ venturi_output(ven, false);
 key_output(key, false);
 venturi_output(ven, false);
 
+%% Get max power transmitted
+max_power_mW = max(abs(agilent_results));
+fprintf('Max power in mW is: %.2f or %.2f dBm\n', max_power_mW, 10*log10(max_power_mW) + 30);
+
 %% Making Graphs
 % Plot Voltage vs Power
 figure; hold on;
-plot(measured_V, 10*log10(abs(agilent_results)) + 30);
+plot(measured_V, 10*log10(abs(agilent_results)) + 30); % dBm display
 hold off;
 xlabel("Voltage");
 ylabel("Power (dBm)");
