@@ -21,10 +21,10 @@ global agilent_results; % mW
 agilent_results = [];
 
 % Keithley voltage source sweep parameters
-v_min = 0; v_max = 4; v_step = 0.1;
+v_min = 0; v_max = 5; v_step = 0.001; %0.01; 
 v_comp = 5; % IPEK data sheet says 5.1374 V (heats to 30K) and 5.9321 V (heats to 50K)
 i_comp = 25; % mA. IPEK data sheet says 29.2 mA (heats to 30K) or 33.7 mA (heats to 50K)
-settle_time = 0.01; %0.1; % seconds. For voltage to stabilize while I collect data?
+settle_time = 0.001; %0.1; % seconds. For voltage to stabilize while I collect data?
 function_handle = @get_agi_power; %@doNothing; % Will be run everytime Keithley changes voltage 
 
 % Make sure Keithley is set to 2 Wire mode because we can't measure voltage across IPEK's resistor with the other two wires.
@@ -32,7 +32,7 @@ key_set_4wire(key, false);
 
 %%  Turn laser on and fix paddles to get best alignment
 laser_power_dbm = 4;
-laser_wavelength_nm = 1550;
+laser_wavelength_nm = 1543.85;
 venturi_set_power(ven, laser_power_dbm);
 venturi_set_wavelength(ven, laser_wavelength_nm);
 venturi_output(ven, true); % Turning the laser on
@@ -74,6 +74,14 @@ plot(measured_V, 10*log10(abs(agilent_results)) + 30); % dBm display
 hold off;
 xlabel("Voltage");
 ylabel("Power (dBm)");
+
+%%
+[output_filename, output_path] = uiputfile('*', 'Select location to save data:');
+if(output_filename)
+    save(strcat(output_path,output_filename), 'actualRate', 'avgTime', 'laserPower', 'channel1', 'channel2', 'lambdaArray');
+else
+    disp("File save cancelled");
+end
 
 %% Helper Functions
 function doNothing()

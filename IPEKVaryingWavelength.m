@@ -9,15 +9,16 @@
 clear; % Clear all variables
 delete(instrfindall); % Delete any previous device configurations
 
+%%
 ven = venturi_connect(); % Initialize the laser
 agi = start_laser(); % Initialize the photo detector... was the old laser
 
 
-% Setup laser sweep parameters
+%% Setup laser sweep parameters
 startWavelength = 1540; % nm
 stopWavelength = 1560; % nm
 sweepRate = 10; % nm/s (limited by venturi collection rate)
-wavelengthStep = 0.25; 
+wavelengthStep = 0.005; 
 laserPower = 4; % dBm, 0 to 9.9
 
 % Setup laser 
@@ -72,6 +73,10 @@ plot(lambdaArray, 10*log10(abs(channel1)) + 30);
 hold off;
 xlabel("Wavelength");
 ylabel("Power (dBm)");
+
+%% Save the figure as a PNG file
+exportgraphics(gcf, '0.25stepsize.png', 'Resolution', 600); % 600 DPI is very detailed for print. 1000 is extremly detailed
+
 
 %%
 [output_filename, output_path] = uiputfile('*', 'Select location to save data:');
