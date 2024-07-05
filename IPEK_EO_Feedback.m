@@ -116,5 +116,8 @@ grid on;
 % Release the hold
 hold off;
 
+%% Save the figure as a PNG file
+exportgraphics(gcf, '#_iter.png', 'Resolution', 600); % 600 DPI is very detailed for print. 1000 is extremly detailed
+
 
 
