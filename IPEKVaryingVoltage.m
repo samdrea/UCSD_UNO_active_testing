@@ -1,6 +1,8 @@
 %{
     Description: Try out the MZI on the Integrated Photonic Education Kit (IPEK) by sweeping various 
     voltages of Keithley power supply and collecting the MZI output power with Venturi6600 OSA
+    - Since longer continuous sweeps will heat up IPEK, the voltage sweep will output 0V for a second before 
+    testing the subsequent voltage
 %}
 %% Run before device initialization
 clear; % Clear any cached values
@@ -25,7 +27,9 @@ v_min = 0; v_max = 5; v_step = 0.001; %0.01;
 v_comp = 5; % IPEK data sheet says 5.1374 V (heats to 30K) and 5.9321 V (heats to 50K)
 i_comp = 25; % mA. IPEK data sheet says 29.2 mA (heats to 30K) or 33.7 mA (heats to 50K)
 settle_time = 0.001; %0.1; % seconds. For voltage to stabilize while I collect data?
-function_handle = @get_agi_power; %@doNothing; % Will be run everytime Keithley changes voltage 
+global cool_time; 
+cool_time = 1; % second. Letting IPEK components cool off in between voltages
+function_handle = @get_power_and_cool_IPEK; % Will be run everytime Keithley changes voltage 
 
 % Make sure Keithley is set to 2 Wire mode because we can't measure voltage across IPEK's resistor with the other two wires.
 key_set_4wire(key, false);
@@ -83,7 +87,7 @@ else
     disp("File save cancelled");
 end
 
-%% Helper Functions
+%% Different Functions to do during sweeps
 function doNothing()
 
 end
@@ -96,4 +100,19 @@ function get_agi_power()
     % Collect the instantaneous data point from Agilent
     inst_data = laser_get_power(agi); 
     agilent_results = [agilent_results inst_data];
+end
+
+function get_power_and_cool_IPEK()
+    % Make agilent and its data accessible
+    global agilent_results;
+    global agi;
+    global cool_time;
+
+    % Collect the instantaneous data point from Agilent
+    inst_data = laser_get_power(agi); 
+    agilent_results = [agilent_results inst_data];
+
+    % Cool the IPEK down before the next voltage change
+    key_set_V(key, 0);
+    pause(cool_time);
 end

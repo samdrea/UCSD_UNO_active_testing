@@ -23,11 +23,11 @@ key_config_V_source(key, i_comp_mA);
 
 % Set laser parameters
 laser_power_dbm = 4;
-laser_wavelength_nm = 1550; % Use the trough when sweeping wavelength (experimentally found)
+laser_wavelength_nm = 1543.85; % Test different wavelengths to try to stabilize output
 venturi_set_power(ven, laser_power_dbm);
 venturi_set_wavelength(ven, laser_wavelength_nm);
 
-%%  Turn laser on and fix paddles to get best alignment
+%% Turn laser on and fix paddles to get best alignment
 venturi_output(ven, true); % Turning the laser on
 
 %% Turn laser off after alignment
@@ -43,13 +43,12 @@ predicted_power_arr = []; % mW.
 % Set feedback loop variables
 input_voltage = 0; % volts
 num_iter = 10;
-V_max = 0; % volts. Max voltage to for transmittance to go from 0 to slightly > 1 (experimentally found)
-P_0 = 0; % mW. Max output power (experimentally found)
-a = pi / (2 * V_max); % Constant of proportionality for transmitted power  
-b = V_max / P_0; % Constant for proportionality for power to voltage conversion
+P_0 = 2.512; % mW. Equal to our power input. Can probably use 1000 * 10 ** ((laser_power_dbm - 30) / 10)) 
+a = 0.3142; % V^-1. Constant of proportionality for transmitted power  
+b = 14.61; % mW^-1. Constant for proportionality for power to voltage conversion
 
 % Verify constants 
-fprintf('Constants a: %d, b: %d\n', a, b);
+fprintf('Constants a: %d, b: %d, P_0: %d\n', a, b, P_0);
 
 %% Run EO feedback loop
 
@@ -64,10 +63,10 @@ for i = 1:num_iter
     tuning_voltage_arr = [tuning_voltage_arr measured_voltage]; % Record the actual voltage output
 
     % Wait for voltage to take effect?
-    pause(0.5); % Seconds
+    pause(0.001); % Seconds
 
     % Collect output power
-    curr_power = laser_get_power(agi);
+    curr_power = laser_get_power(agi); % Read in mW
     measured_power_arr = [measured_power_arr curr_power];
     predicted_power = P_0 * (sin(a * input_voltage)) ** 2;
     predicted_power_arr = [predicted_power_arr predicted_power];
@@ -91,8 +90,29 @@ key_output(key, false);
 key_output(key, false);
 venturi_output(ven, false);
 
-%% Making Graphs
+%% Plot for iteration vs power
+% Define an iteration array
+iterations = 1:num_iter;
 
+% Create a figure
+figure; 
+
+% Plot the measured power against iterations
+plot(iterations, measured_power_arr, '-x', 'Color', 'b', 'DisplayName', 'Measured Power');
+hold on; % Hold the current plot
+
+% Plot the predicted power against iterations
+plot(iterations, predicted_power_arr, '-o', 'Color', 'r', 'DisplayName', 'Predicted Power'); 
+
+% Add labels and title
+xlabel('Iteration');
+ylabel('Power (mW)');
+title('Power vs. Iteration');
+legend;
+grid on;
+hold off;
+
+%% Plot for voltage vs power graph
 figure; % Create the figure
 
 % Plot the output power
@@ -106,14 +126,8 @@ plot(tuning_voltage_arr, predicted_power_arr, '-o', 'Color', 'r', 'DisplayName',
 xlabel('Voltage (V)');
 ylabel('Power (mW)');
 title('Measured Power vs. Predicted Power');
-
-% Add a legend
 legend;
-
-% Show grid
 grid on;
-
-% Release the hold
 hold off;
 
 %% Save the figure as a PNG file
