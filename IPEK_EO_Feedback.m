@@ -18,11 +18,12 @@ powerMeterRange1 = -20; % dBm, multiples of 10 from -60 to 10
 agilent_set_range(agi, powerMeterRange1, 1);
 
 % Set Keithley to voltage source with current compliance
-i_comp_mA = 25 % IPEK data sheet says 29.2 mA (heats to 30K) or 33.7 mA (heats to 50K)
+i_comp_mA = 25; % IPEK data sheet says 29.2 mA (heats to 30K) or 33.7 mA (heats to 50K)
 key_config_V_source(key, i_comp_mA);
+key_set_4wire(key, false); % 2 wire mode
 
 % Set laser parameters
-laser_power_dbm = 4;
+laser_power_dbm = 0.5;
 laser_wavelength_nm = 1543.85; % Test different wavelengths to try to stabilize output
 venturi_set_power(ven, laser_power_dbm);
 venturi_set_wavelength(ven, laser_wavelength_nm);
@@ -42,18 +43,35 @@ predicted_power_arr = []; % mW.
 
 % Set feedback loop variables
 input_voltage = 0; % volts
-num_iter = 10;
-P_0 = 2.512; % mW. Equal to our power input. Can probably use 1000 * 10 ** ((laser_power_dbm - 30) / 10)) 
-a = 0.3142; % V^-1. Constant of proportionality for transmitted power  
-b = 14.61; % mW^-1. Constant for proportionality for power to voltage conversion
+num_iter = 150;
+P_0 =  0.01354; % mW. Equal to our power input. Can probably use 1000 * 10 ** ((laser_power_dbm - 30) / 10)) 
+%a = 0.2322; % V^-1. Constant of proportionality for transmitted power  
+%b = 541.8719; % V/mW. Constant for proportionality for power to voltage conversion
+V_max = 5; %V. Don't exceed this
 
 % Verify constants 
 fprintf('Constants a: %d, b: %d, P_0: %d\n', a, b, P_0);
 
+%% Constant calculator
+v0 = 0.68;
+p0 = 0.01354;
+
+v1 = 3.65;
+p1 = 0.005481;
+
+
+a = asin(sqrt(p1/p0))/(v1-v0)
+b = (v1-v0)/p1
 %% Run EO feedback loop
 
 % Turn laser on
 venturi_output(ven, true);
+
+% Set Keithley voltage to 0 for safety before turning on
+key_set_V(key, 0);
+    
+% Turn Keithley output on
+key_output(key, true);
 
 for i = 1:num_iter 
 
@@ -63,12 +81,12 @@ for i = 1:num_iter
     tuning_voltage_arr = [tuning_voltage_arr measured_voltage]; % Record the actual voltage output
 
     % Wait for voltage to take effect?
-    pause(0.001); % Seconds
+    pause(0.1); % Seconds
 
     % Collect output power
     curr_power = laser_get_power(agi); % Read in mW
     measured_power_arr = [measured_power_arr curr_power];
-    predicted_power = P_0 * (sin(a * input_voltage)) ** 2;
+    predicted_power = P_0 * (sin(a * input_voltage)) ^ 2;
     predicted_power_arr = [predicted_power_arr predicted_power];
 
     % Calculate next tuning voltage based on output power 
@@ -102,7 +120,7 @@ plot(iterations, measured_power_arr, '-x', 'Color', 'b', 'DisplayName', 'Measure
 hold on; % Hold the current plot
 
 % Plot the predicted power against iterations
-plot(iterations, predicted_power_arr, '-o', 'Color', 'r', 'DisplayName', 'Predicted Power'); 
+%plot(iterations, predicted_power_arr, '-o', 'Color', 'r', 'DisplayName', 'Predicted Power'); 
 
 % Add labels and title
 xlabel('Iteration');
@@ -120,7 +138,7 @@ plot(tuning_voltage_arr, measured_power_arr, '-x', 'Color', 'b', 'DisplayName', 
 hold on; % Hold the current plot
 
 % Plot the predicted power
-plot(tuning_voltage_arr, predicted_power_arr, '-o', 'Color', 'r', 'DisplayName', 'Predicted Power'); 
+%plot(tuning_voltage_arr, predicted_power_arr, '-o', 'Color', 'r', 'DisplayName', 'Predicted Power'); 
 
 % Add labels and title
 xlabel('Voltage (V)');
